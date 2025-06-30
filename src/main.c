@@ -11,6 +11,9 @@
 // Internals
 //---
 
+/* TODO: move me */
+void **__ivk_area_addr = (void*)0x00000000;
+
 /* high-level instruction information (GUI-level)*/
 struct inst_info {
     u32 rn_data;
@@ -21,16 +24,6 @@ struct inst_info {
     u32 Q;
     u32 T;
     int (*code)(int y, struct inst_info *);
-};
-
-/* low-level instruction request */
-struct inst_request {
-    u32 inst;
-    u32 rn;
-    u32 rm;
-    u32 M;
-    u32 Q;
-    u32 T;
 };
 
 /* low-level instruction response */
@@ -49,29 +42,19 @@ struct inst_resp {
 static int div1(int y, struct inst_info *info)
 {
     struct inst_resp resp;
-    struct inst_request req = {
-        .inst   = 0b0011000000000100,
-        .rn     = info->rn_who,
-        .rm     = info->rm_who,
-        .M      = info->M,
-        .Q      = info->Q,
-        .T      = info->T,
-    };
-    req.inst |= info->rn_who << 8;
-    req.inst |= info->rm_who << 4;
+    u32 ret;
 
-    extern u32 __inst_magic_invoke(void *, void *);
-    u32 ret = __inst_magic_invoke(&req, &resp);
+    extern u32 __div1_magic_invoke(void *, void *);
+    ret = __div1_magic_invoke(&resp, &info);
 
     _print("DIV1    Rm,Rn");
     _print("  desc: '1-step division (Rn ÷ Rm)'");
     _print("  config:");
-    _print("    raw: 0b%016b", req.inst);
     _print("    Rn: %d -> %08x", info->rn_who, info->rn_data);
     _print("    Rm: %d -> %08x", info->rm_who, info->rm_data);
     _print("    M, Q, T: %d, %d, %d", info->M, info->Q, info->T);
     _print("  result:");
-    _print("    ret: %p", ret);
+    _print("    ret: %p - %p", ret, __ivk_area_addr);
     _print("    Rn: %08x", resp.rn);
     _print("    Rm: %08x", resp.rm);
     _print("    M, Q, T: %d, %d, %d", resp.M, resp.Q, resp.T);
