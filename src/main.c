@@ -53,12 +53,12 @@ static int div1(int y, struct inst_info *info)
     _("  desc: 1-step division (Rn÷Rm)");
     _("  config:");
     _("    Rn: %d -> %08x (%d)", info->rn_who, info->rn_data, info->rn_data);
-    _("    Rm: %d -> %08x (%d)", info->rm_who, info->rm_data);
+    _("    Rm: %d -> %08x (%d)", info->rm_who, info->rm_data, info->rm_data);
     _("    M,Q,S,T: %d,%d,%d,%d", info->M, info->Q, info->S, info->T);
     _("  result:");
     _("    ret: %p - %p", ret, __ivk_area_addr);
-    _("    Rn: %08x", resp.rn);
-    _("    Rm: %08x", resp.rm);
+    _("    Rn: %08x (%d)", resp.rn, resp.rn);
+    _("    Rm: %08x (%d)", resp.rm, resp.rm);
     _("    M,Q,S,T: %d,%d,%d,%d", resp.M, resp.Q, resp.S, resp.T);
     _("    SR: %08x - %08x", resp.SR_before, resp.SR_after);
     _("    MACL: %08x", resp.MACL);
@@ -74,7 +74,7 @@ int main(void)
 {
     struct inst_info table[INST_MAX] = {
         {
-            .rn_who = 0,
+            .rn_who = 1,
             .rm_who = 0,
             .rn_data = 10,
             .rm_data = 3,

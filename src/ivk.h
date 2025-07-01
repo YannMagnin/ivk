@@ -5,8 +5,16 @@
 // ivk_get_*() - invokation macros
 //---
 
+/* get info->rn_data */
+#define ivk_req_get_rn_data(info, out) \
+    mov.l   @(0, info), out
+
+/* get info->rm_data */
+#define ivk_req_get_rm_data(info, out) \
+    mov.l   @(4, info), out
+
 /* get info->rn_who */
-#define ivk_get_rn_who(info, out, error) \
+#define ivk_req_get_rn_who(info, out, error) \
     mov.l   @(8, info), out     ;\
     mov     #15, r0             ;\
     cmp/eq  r0, out             ;\
@@ -14,7 +22,7 @@
     mov     #-3, r0
 
 /* get info->rm_who */
-#define ivk_get_rm_who(info, out, error) \
+#define ivk_req_get_rm_who(info, out, error) \
     mov.l   @(12, info), out    ;\
     mov     #15, r0             ;\
     cmp/eq  r0, out             ;\
@@ -22,7 +30,7 @@
     mov     #-3, r0
 
 /* get and generate SR.M mask */
-#define ivk_get_M_mask(info, out) \
+#define ivk_req_get_M_mask(info, out) \
     mov.l   @(16, info), r0     ;\
     cmp/pl  r0                  ;\
     movt    r0                  ;\
@@ -31,7 +39,7 @@
     or      r0, out
 
 /* get and generate SR.Q mask */
-#define ivk_get_Q_mask(info, out) \
+#define ivk_req_get_Q_mask(info, out) \
     mov.l   @(20, info), r0     ;\
     cmp/pl  r0                  ;\
     movt    r0                  ;\
@@ -39,7 +47,7 @@
     or      r0, out
 
 /* get and generate SR.S mask */
-#define ivk_get_S_mask(info, out) \
+#define ivk_req_get_S_mask(info, out) \
     mov.l   @(24, info), r0     ;\
     cmp/pl  r0                  ;\
     movt    r0                  ;\
@@ -47,7 +55,7 @@
     or      r0, out
 
 /* get and generate SR.T mask */
-#define ivk_get_T_mask(info, out) \
+#define ivk_req_get_T_mask(info, out) \
     mov.l   @(28, info), r0     ;\
     cmp/pl  r0                  ;\
     movt    r0                  ;\
@@ -191,6 +199,17 @@
     mov.w   r0, @area       ;\
     add     __h(hash)2,area
 
-
+/* generate a iiii.iiii.nnnn.iiii instruction */
+#define ivk_push_inst_iini(area, i3, i2, n1, i0)  \
+    mov     __h(hash)4, r3  ;\
+    mov     __h(hash)i3,r0  ;\
+    shld    r3,r0           ;\
+    or      __h(hash)i2,r0  ;\
+    shld    r3,r0           ;\
+    or      n1,r0           ;\
+    shld    r3,r0           ;\
+    or      __h(hash)i0,r0  ;\
+    mov.w   r0, @area       ;\
+    add     __h(hash)2,area
 
 #endif /* __IVK_H__ */

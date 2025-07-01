@@ -23,8 +23,8 @@
 asm_gen_function(__ivk_prepare):
     asm_check_null(r4, ivk_prepare_return)
     asm_check_null(r5, ivk_prepare_return)
-    ivk_get_rn_who(r5, r1, ivk_prepare_return)
-    ivk_get_rm_who(r5, r2, ivk_prepare_return)
+    ivk_req_get_rn_who(r5, r1, ivk_prepare_return)
+    ivk_req_get_rm_who(r5, r2, ivk_prepare_return)
     mov.l   ivk_area_addr, r3
     mov.l   @r3, r6
     tst     r6, r6
@@ -68,10 +68,10 @@ asm_gen_function(__ivk_exec_area):
 
 ivk_exec_gen_sr:
     mov #0, r1
-    ivk_get_M_mask(r5, r1)
-    ivk_get_Q_mask(r5, r1)
-    ivk_get_S_mask(r5, r1)
-    ivk_get_T_mask(r5, r1)
+    ivk_req_get_M_mask(r5, r1)
+    ivk_req_get_Q_mask(r5, r1)
+    ivk_req_get_S_mask(r5, r1)
+    ivk_req_get_T_mask(r5, r1)
     mov.l   1f, r0
     or      r0, r1
     ldc     r1, sr
@@ -100,18 +100,21 @@ ivk_exec_invalidate_cache:
 
 ivk_exec:
     stc     sr, r2
-    ivk_resp_set_sr_before(r4, r1)
-    //ivk_get_rn_data(r5, r0, ivk_exec_exit)
-    //ivk_get_rm_data(r5, r1, ivk_exec_exit)
-    //mov.l   r4, @-r15
-    //mov.l   r5, @-r15
-    //mov.l   ivk_area_addr, r0
-    //jsr     @r0
-    //nop
-    //mov.l   @r15+, r5
-    //mov.l   @r15+, r4
-    mov     #0, r0
-    mov     #0, r1
+    ivk_resp_set_sr_before(r4, r2)
+    ivk_req_get_rn_data(r5, r0)
+    ivk_req_get_rm_data(r5, r1)
+    mov.l   r4, @-r15
+    mov.l   r5, @-r15
+    mov.l   1f, r3
+    mov.l   @r3, r3
+    jsr     @r3
+    nop
+    mov.l   @r15+, r5
+    bra     ivk_exec_fetch_cpu_ctx
+    mov.l   @r15+, r4
+.balign 4
+1:
+    .long   ___ivk_area_addr
 
 ivk_exec_fetch_cpu_ctx:
     stc     sr, r2
@@ -124,7 +127,7 @@ ivk_exec_fetch_cpu_ctx:
     ivk_resp_set_T(r4, r2)
     ivk_resp_set_MACL(r4)
     ivk_resp_set_MACH(r4)
-    mov     r1, r0
+    mov     #0, r0
 
 ivk_exec_exit:
     ldc.l   @r15+, sr
