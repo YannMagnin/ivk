@@ -13,6 +13,7 @@ find_package(Gint 2.9 REQUIRED)
 set(SOURCES
   src/main.c
   src/div1.S
+  src/_ivk.S
 )
 # Shared assets, fx-9860G-only assets and fx-CG-50-only assets
 set(ASSETS

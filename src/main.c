@@ -12,7 +12,7 @@
 //---
 
 /* TODO: move me */
-void **__ivk_area_addr = (void*)0x00000000;
+extern void **__ivk_area_addr;
 
 /* high-level instruction information (GUI-level)*/
 struct inst_info {
