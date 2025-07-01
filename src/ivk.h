@@ -2,7 +2,7 @@
 #define __IVK_H__ 1
 
 //---
-// ivk_*() - invokation macros
+// ivk_get_*() - invokation macros
 //---
 
 /* get info->rn_who */
@@ -21,6 +21,106 @@
     bt      error               ;\
     mov     #-3, r0
 
+/* get and generate SR.M mask */
+#define ivk_get_M_mask(info, out) \
+    mov.l   @(16, info), r0     ;\
+    cmp/pl  r0                  ;\
+    movt    r0                  ;\
+    shll8   r0                  ;\
+    shll    r0                  ;\
+    or      r0, out
+
+/* get and generate SR.Q mask */
+#define ivk_get_Q_mask(info, out) \
+    mov.l   @(20, info), r0     ;\
+    cmp/pl  r0                  ;\
+    movt    r0                  ;\
+    shll8   r0                  ;\
+    or      r0, out
+
+/* get and generate SR.S mask */
+#define ivk_get_S_mask(info, out) \
+    mov.l   @(24, info), r0     ;\
+    cmp/pl  r0                  ;\
+    movt    r0                  ;\
+    shll    r0                  ;\
+    or      r0, out
+
+/* get and generate SR.T mask */
+#define ivk_get_T_mask(info, out) \
+    mov.l   @(28, info), r0     ;\
+    cmp/pl  r0                  ;\
+    movt    r0                  ;\
+    or      r0, out
+
+//---
+// ivk_resp_set_*() - response setter
+//---
+
+/* save Rn data */
+#define ivk_resp_set_rn_data(resp, data) \
+    mov.l   data, @(0, resp)
+
+/* save Rm data */
+#define ivk_resp_set_rm_data(resp, data) \
+    mov.l   data, @(4, resp)
+
+/* save SR.M status bit */
+#define ivk_resp_set_M(resp, sr) \
+    mov     __h(hash)2, r3      ;\
+    shll8   r3                  ;\
+    and     sr, r3              ;\
+    cmp/pl  r3                  ;\
+    movt    r3                  ;\
+    mov.l   r3, @(8, resp)
+
+/* save SR.Q status bit */
+#define ivk_resp_set_Q(resp, sr) \
+    mov     __h(hash)1, r3      ;\
+    shll8   r3                  ;\
+    and     sr, r3              ;\
+    cmp/pl  r3                  ;\
+    movt    r3                  ;\
+    mov.l   r3, @(12, resp)
+
+/* save SR.S status bit */
+#define ivk_resp_set_S(resp, sr) \
+    mov     __h(hash)2, r3      ;\
+    and     sr, r3              ;\
+    cmp/pl  r3                  ;\
+    movt    r3                  ;\
+    mov.l   r3, @(16, resp)
+
+/* save SR.T status bit */
+#define ivk_resp_set_T(resp, sr) \
+    mov     __h(hash)1, r3      ;\
+    and     sr, r3              ;\
+    cmp/pl  r3                  ;\
+    movt    r3                  ;\
+    mov.l   r3, @(20, resp)
+
+/* save SR register before invocation */
+#define ivk_resp_set_sr_before(resp, sr) \
+    mov.l   sr, @(24, resp)
+
+/* save SR register after invocation */
+#define ivk_resp_set_sr_after(resp, sr) \
+    mov.l   sr, @(28, resp)
+
+/* save MACL register */
+#define ivk_resp_set_MACL(resp)  \
+    sts     macl, r3            ;\
+    mov.l   r3, @(32, resp)
+
+/* save MACH register */
+#define ivk_resp_set_MACH(resp)  \
+    sts     mach, r3            ;\
+    mov.l   r3, @(36, resp)
+
+//---
+// call helpers
+//---
+
 #define ivk_call_prepare(label_exit) \
     mov.l   1f, r0              ;\
     jsr     @r0                 ;\
@@ -33,6 +133,16 @@
     .long   ___ivk_prepare      ;\
 2:
 
+#define ivk_call_exec() \
+    mov.l   1f, r0              ;\
+    jsr     @r0                 ;\
+    nop                         ;\
+    bra     2f                  ;\
+    nop                         ;\
+.balign 4                       ;\
+1:                              ;\
+    .long   ___ivk_exec_area    ;\
+2:
 
 //---
 // asm_push_inst_*() - generate and push instruction to the area

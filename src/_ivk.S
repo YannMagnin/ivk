@@ -19,14 +19,8 @@
 ** notes:
 **  - check NULL arguments
 **  - allocate invoke area if needed
-**  - ensure req->rn_who/req->rm_who are not set to 15
-** todo:
-**  - why should I handle r4/r5 as double pointer? */
+**  - ensure req->rn_who/req->rm_who are not set to 15 */
 asm_gen_function(__ivk_prepare):
-    asm_check_null(r4, ivk_prepare_return)
-    asm_check_null(r5, ivk_prepare_return)
-    mov.l   @r5, r5
-    mov.l   @r4, r4
     asm_check_null(r4, ivk_prepare_return)
     asm_check_null(r5, ivk_prepare_return)
     ivk_get_rn_who(r5, r1, ivk_prepare_return)
@@ -63,6 +57,80 @@ ivk_prepare_return:
 ivk_area_addr:  .long ___ivk_area_addr
 malloc:         .long _malloc
 
+
+/* prototype:
+**  - r4    <sturct inst_resp>      response info
+**  - r5    <struct inst_req>       request info
+*/
+asm_gen_function(__ivk_exec_area):
+    sts.l   pr, @-r15
+    stc.l   sr, @-r15
+
+ivk_exec_gen_sr:
+    mov #0, r1
+    ivk_get_M_mask(r5, r1)
+    ivk_get_Q_mask(r5, r1)
+    ivk_get_S_mask(r5, r1)
+    ivk_get_T_mask(r5, r1)
+    mov.l   1f, r0
+    or      r0, r1
+    ldc     r1, sr
+    bra     ivk_exec_invalidate_cache
+    nop
+.balign 4
+1:  .long   0x400000f0
+
+ivk_exec_invalidate_cache:
+    // FIXME: invalidate the cache to avoid ivk_area to be corrupted
+    // FIXME: ...but we need to be in P2 or IL to execute the following code
+    // FIXME: ...otherwise the device will hard-crash without notice !
+    //mov.l   1f, r1
+    //mov.l   2f, r0
+    //mov.l   r0, @r1
+    //synco
+    //mov.l   @r1, r1
+    //or      #0x08, r0
+    //mov.l   r0, @r1
+    //synco
+    bra     ivk_exec
+    nop
+.balign 4
+1:  .long   0xff00001c
+2:  .long   0x0000010f
+
+ivk_exec:
+    stc     sr, r2
+    ivk_resp_set_sr_before(r4, r1)
+    //ivk_get_rn_data(r5, r0, ivk_exec_exit)
+    //ivk_get_rm_data(r5, r1, ivk_exec_exit)
+    //mov.l   r4, @-r15
+    //mov.l   r5, @-r15
+    //mov.l   ivk_area_addr, r0
+    //jsr     @r0
+    //nop
+    //mov.l   @r15+, r5
+    //mov.l   @r15+, r4
+    mov     #0, r0
+    mov     #0, r1
+
+ivk_exec_fetch_cpu_ctx:
+    stc     sr, r2
+    ivk_resp_set_sr_after(r4, r2)
+    ivk_resp_set_rn_data(r4, r0)
+    ivk_resp_set_rm_data(r4, r1)
+    ivk_resp_set_M(r4, r2)
+    ivk_resp_set_Q(r4, r2)
+    ivk_resp_set_S(r4, r2)
+    ivk_resp_set_T(r4, r2)
+    ivk_resp_set_MACL(r4)
+    ivk_resp_set_MACH(r4)
+    mov     r1, r0
+
+ivk_exec_exit:
+    ldc.l   @r15+, sr
+    lds.l   @r15+, pr
+    rts
+    nop
 
 
 //---

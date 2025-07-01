@@ -27,26 +27,8 @@ _div1_special_stub:
     ivk_push_inst_iiii(r6, 0b0000, 0b0000, 0b0000, 0b1011)   ! rts
     ivk_push_inst_iiii(r6, 0b0110, 0b0010, 0b0000, 0b0011)   ! mov  r2,r0
 _div1_ivk_call:
-    mov     #0, r0
+    ivk_call_exec()
 _div1_exit:
     lds.l   @r15+, pr
     rts
     nop
-.balign 4
-ivk_prepare:    .long ___ivk_prepare
-
-//
-//
-//_ivk_call:
-//    // todo: context save
-//    // todo: switch bank register
-//    // todo: invalitate the cache
-//    mov     r10, r0
-//
-//_ivk_return:
-//    mov.l   @r15+, r8
-//    mov.l   @r15+, r9
-//    mov.l   @r15+, r10
-//    lds.l   @r15+, pr
-//    rts
-//    nop

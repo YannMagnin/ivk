@@ -4,8 +4,8 @@
 
 #define u32         uint32_t
 #define INST_MAX    1
-#define _print(str, ...) \
-    dprint(0, (y++)*12, C_BLACK, str __VA_OPT__(,) __VA_ARGS__)
+#define _(str, ...) \
+    dprint(3, 3+((y++)*12), C_BLACK, str __VA_OPT__(,) __VA_ARGS__)
 
 //---
 // Internals
@@ -22,6 +22,7 @@ struct inst_info {
     u32 rm_who;
     u32 M;
     u32 Q;
+    u32 S;
     u32 T;
     int (*code)(int y, struct inst_info *);
 };
@@ -32,6 +33,7 @@ struct inst_resp {
     u32 rm;
     u32 M;
     u32 Q;
+    u32 S;
     u32 T;
     u32 SR_before;
     u32 SR_after;
@@ -45,21 +47,22 @@ static int div1(int y, struct inst_info *info)
     u32 ret;
 
     extern u32 __div1_magic_invoke(void *, void *);
-    ret = __div1_magic_invoke(&resp, &info);
+    ret = __div1_magic_invoke(&resp, info);
 
-    _print("DIV1    Rm,Rn");
-    _print("  desc: '1-step division (Rn ÷ Rm)'");
-    _print("  config:");
-    _print("    Rn: %d -> %08x", info->rn_who, info->rn_data);
-    _print("    Rm: %d -> %08x", info->rm_who, info->rm_data);
-    _print("    M, Q, T: %d, %d, %d", info->M, info->Q, info->T);
-    _print("  result:");
-    _print("    ret: %p - %p", ret, __ivk_area_addr);
-    _print("    Rn: %08x", resp.rn);
-    _print("    Rm: %08x", resp.rm);
-    _print("    M, Q, T: %d, %d, %d", resp.M, resp.Q, resp.T);
-    _print("    MACL: %08x", resp.MACL);
-    _print("    MACH: %08x", resp.MACH);
+    _("DIV1    Rm,Rn");
+    _("  desc: 1-step division (Rn÷Rm)");
+    _("  config:");
+    _("    Rn: %d -> %08x (%d)", info->rn_who, info->rn_data, info->rn_data);
+    _("    Rm: %d -> %08x (%d)", info->rm_who, info->rm_data);
+    _("    M,Q,S,T: %d,%d,%d,%d", info->M, info->Q, info->S, info->T);
+    _("  result:");
+    _("    ret: %p - %p", ret, __ivk_area_addr);
+    _("    Rn: %08x", resp.rn);
+    _("    Rm: %08x", resp.rm);
+    _("    M,Q,S,T: %d,%d,%d,%d", resp.M, resp.Q, resp.S, resp.T);
+    _("    SR: %08x - %08x", resp.SR_before, resp.SR_after);
+    _("    MACL: %08x", resp.MACL);
+    _("    MACH: %08x", resp.MACH);
     return y;
 }
 
@@ -73,10 +76,11 @@ int main(void)
         {
             .rn_who = 0,
             .rm_who = 0,
-            .rn_data=0xdeadbeef,
-            .rm_data=0xb0cad0de,
+            .rn_data = 10,
+            .rm_data = 3,
             .M=0,
             .Q=0,
+            .S=0,
             .T=0,
             .code=&div1
         },
@@ -116,11 +120,14 @@ int main(void)
             case KEY_ARROW:
                 table[idx].rm_data -= 1;
                 break;
-            case KEY_SIN:
+            case KEY_LN:
                 table[idx].M ^= 1;
                 break;
-            case KEY_COS:
+            case KEY_SIN:
                 table[idx].Q ^= 1;
+                break;
+            case KEY_COS:
+                table[idx].S ^= 1;
                 break;
             case KEY_TAN:
                 table[idx].T ^= 1;
