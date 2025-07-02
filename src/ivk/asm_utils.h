@@ -19,13 +19,13 @@
  * - the function's name must start with a '_'
  * - the function should start in a 4-aligned address in order to benefit of
  *      the ILP (Instruction Level Parallelism) */
-#define asm_gen_function(name)   \
+#define asm_declare_function(name) \
     .balign 4                   ;\
     .global _##name             ;\
     .type   _##name,@function   ;\
     _##name
 
-#define asm_gen_object(name)     \
+#define asm_declare_object(name) \
     .balign 4                   ;\
     .global _##name             ;\
     .type   _##name,@object     ;\

@@ -46,8 +46,8 @@ static int div1(int y, struct inst_info *info)
     struct inst_resp resp;
     u32 ret;
 
-    extern u32 __div1_magic_invoke(void *, void *);
-    ret = __div1_magic_invoke(&resp, info);
+    extern u32 __div1_ivk_exec(void *, void *);
+    ret = __div1_ivk_exec(&resp, info);
 
     _("DIV1    Rm,Rn");
     _("  desc: 1-step division (Rn÷Rm)");
