@@ -9,14 +9,21 @@ include(GenerateG3A)
 include(GenerateHH2Bin)
 include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
+find_package(Python3 REQUIRED)
 
 set(SOURCES
   src/main.c
-  src/instructions.S
+  src/instructions_cpu.S
   src/ivk/_code.S
   src/ivk/_data.S
   src/ivk/prepare.S
   src/ivk/exec.S
+)
+
+add_custom_command(
+    OUTPUT ../src/instructions_cpu.S
+    COMMAND Python3::Interpreter ../scripts/instructions_generator.py
+    DEPENDS ../scripts/instructions_generator.py
 )
 
 add_executable(ivk ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})

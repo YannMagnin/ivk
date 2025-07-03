@@ -8,3 +8,6 @@ __pycache__/
 *.sublime-project
 *.sublime-workspace
 .vscode
+
+# custom
+src/instructions_cpu.S
