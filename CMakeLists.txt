@@ -29,10 +29,10 @@ if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G)
     NAME "ivk" ICON assets-fx/icon.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCG50)
   generate_g3a(TARGET ivk OUTPUT "ivk.g3a"
-    NAME "ivk" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
+    NAME "ivk" ICONS assets/cg/icon-uns.png assets/cg/icon-sel.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G_G3A)
   generate_g3a(TARGET ivk OUTPUT "ivk-fx.g3a"
-    NAME "ivk-fx" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
+    NAME "ivk-fx" ICONS assets/cg/icon-uns.png assets/cg/icon-sel.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCP)
   generate_hh2_bin(TARGET ivk OUTPUT "ivk-hh2.bin")
 endif()
