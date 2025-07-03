@@ -2,7 +2,7 @@
 # toolchain file and module path of the fxSDK
 
 cmake_minimum_required(VERSION 3.15)
-project(MyAddin LANGUAGES C ASM)
+project(ivk LANGUAGES C ASM)
 
 include(GenerateG1A)
 include(GenerateG3A)
@@ -18,34 +18,21 @@ set(SOURCES
   src/ivk/prepare.S
   src/ivk/exec.S
 )
-# Shared assets, fx-9860G-only assets and fx-CG-50-only assets
-set(ASSETS
-  # ...
-)
-set(ASSETS_fx
-  assets-fx/example.png
-  # ...
-)
-set(ASSETS_cg
-  assets-cg/example.png
-  # ...
-)
 
-fxconv_declare_assets(${ASSETS} ${ASSETS_fx} ${ASSETS_cg} WITH_METADATA)
-
-add_executable(myaddin ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})
-target_compile_options(myaddin PRIVATE -Wall -Wextra -Os -g -flto=auto)
-target_link_libraries(myaddin Gint::Gint)
+add_executable(ivk ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})
+target_compile_options(ivk PRIVATE -Wall -Wextra -Os -g -flto=auto)
+target_include_directories(ivk PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(ivk Gint::Gint)
 
 if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G)
-  generate_g1a(TARGET myaddin OUTPUT "MyAddin.g1a"
-    NAME "MyAddin" ICON assets-fx/icon.png)
+  generate_g1a(TARGET ivk OUTPUT "ivk.g1a"
+    NAME "ivk" ICON assets-fx/icon.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCG50)
-  generate_g3a(TARGET myaddin OUTPUT "MyAddin.g3a"
-    NAME "MyAddin" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
+  generate_g3a(TARGET ivk OUTPUT "ivk.g3a"
+    NAME "ivk" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G_G3A)
-  generate_g3a(TARGET myaddin OUTPUT "MyAddin-fx.g3a"
-    NAME "MyAddin-fx" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
+  generate_g3a(TARGET ivk OUTPUT "ivk-fx.g3a"
+    NAME "ivk-fx" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCP)
-  generate_hh2_bin(TARGET myaddin OUTPUT "MyAddin-hh2.bin")
+  generate_hh2_bin(TARGET ivk OUTPUT "ivk-hh2.bin")
 endif()

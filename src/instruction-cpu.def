@@ -1,0 +1,5 @@
+//
+// CPU instruction declaration
+//
+0011.nnnn.mmmm.0100     div1        "1-step division (Rn÷Rm)→Rn"
+0011.nnnn.mmmm.1101     dmuls.l     "signed 64bit (Rn×Rm)→MACH/L"

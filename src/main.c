@@ -3,7 +3,7 @@
 
 
 #define u32         uint32_t
-#define INST_MAX    1
+#define INST_MAX    2
 #define _(str, ...) \
     dprint(3, 3+((y++)*12), C_BLACK, str __VA_OPT__(,) __VA_ARGS__)
 
@@ -66,6 +66,32 @@ static int div1(int y, struct inst_info *info)
     return y;
 }
 
+
+static int dmulsl(int y, struct inst_info *info)
+{
+    struct inst_resp resp;
+    u32 ret;
+
+    extern u32 __dmulsl_ivk_exec(void *, void *);
+    ret = __dmulsl_ivk_exec(&resp, info);
+
+    _("DMULS.L  Rm,Rn");
+    _("  desc: signed 64bit Rn×Rm");
+    _("  config:");
+    _("    Rn: %d -> %08x (%d)", info->rn_who, info->rn_data, info->rn_data);
+    _("    Rm: %d -> %08x (%d)", info->rm_who, info->rm_data, info->rm_data);
+    _("    M,Q,S,T: %d,%d,%d,%d", info->M, info->Q, info->S, info->T);
+    _("  result:");
+    _("    ret: %p - %p", ret, __ivk_area_addr);
+    _("    Rn: %08x (%d)", resp.rn, resp.rn);
+    _("    Rm: %08x (%d)", resp.rm, resp.rm);
+    _("    M,Q,S,T: %d,%d,%d,%d", resp.M, resp.Q, resp.S, resp.T);
+    _("    SR: %08x - %08x", resp.SR_before, resp.SR_after);
+    _("    MACL: %08x", resp.MACL);
+    _("    MACH: %08x", resp.MACH);
+    return y;
+}
+
 //---
 // Public
 //---
@@ -83,6 +109,17 @@ int main(void)
             .S=0,
             .T=0,
             .code=&div1
+        },
+        {
+            .rn_who = 1,
+            .rm_who = 0,
+            .rn_data = 10,
+            .rm_data = 3,
+            .M=0,
+            .Q=0,
+            .S=0,
+            .T=0,
+            .code=&dmulsl
         },
     };
     int idx;
@@ -131,6 +168,12 @@ int main(void)
                 break;
             case KEY_TAN:
                 table[idx].T ^= 1;
+                break;
+            case KEY_LEFT:
+                if (idx < INST_MAX - 1) idx += 1;
+                break;
+            case KEY_RIGHT:
+                if (idx > 0) idx -= 1;
                 break;
         }
     }

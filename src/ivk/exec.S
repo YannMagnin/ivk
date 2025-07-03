@@ -53,28 +53,10 @@ ivk_exec_gen_sr:
     mov.l   1f, r0
     or      r0, r1
     ldc     r1, sr
-    bra     ivk_exec_invalidate_cache
-    nop
-.balign 4
-1:  .long   0x400000f0
-
-ivk_exec_invalidate_cache:
-    // FIXME: invalidate the cache to avoid ivk_area to be corrupted
-    // FIXME: ...but we need to be in P2 or IL to execute the following code
-    // FIXME: ...otherwise the device will hard-crash without notice !
-    //mov.l   1f, r1
-    //mov.l   2f, r0
-    //mov.l   r0, @r1
-    //synco
-    //mov.l   @r1, r1
-    //or      #0x08, r0
-    //mov.l   r0, @r1
-    //synco
     bra     ivk_exec
     nop
 .balign 4
-1:  .long   0xff00001c
-2:  .long   0x0000010f
+1:  .long   0x400000f0
 
 ivk_exec:
     stc     sr, r2
