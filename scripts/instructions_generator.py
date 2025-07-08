@@ -32,8 +32,8 @@ def _ivk_gen_c(info: Any, line: Any) -> Any:
     """ generate C information
     """
     info['c'].append((
-        line['opname'],
-        line['opdesc'],
+        f"\"{line['opname']}\"",
+        f"{line['opdesc']}",
         f"__{line['opname'].replace('.','')}_ivk_exec",
     ))
 
@@ -42,7 +42,7 @@ def _ivk_gen_file_asm(prefix: Path, asm: Any) -> None:
     """
     asm_content = (
         '//---\n'
-        '// declare all instructions IVK trampoline\n'
+        '// declare all instructions IVK tracpoline\n'
         '//---\n'
         '#include "./ivk/ivk_utils.h"\n'
         '.text\n'
@@ -54,6 +54,38 @@ def _ivk_gen_file_asm(prefix: Path, asm: Any) -> None:
     asm_path.unlink(missing_ok=True)
     with open(asm_path, 'x', encoding='utf-8') as asm_file:
         asm_file.write(asm_content)
+
+def _ivk_gen_file_c(prefix: Path, c: list[tuple[str,str,str]]) -> None:
+    """ generate the GUI information
+    """
+    print(c)
+    c_content = (
+        '//---\n'
+        '// declare all instructions GUI information\n'
+        '//---\n'
+        '#include <stddef.h>\n'
+        '#include <stdint.h>\n'
+        '#include "ivk/instruction.h"\n'
+        '\n'
+        '// all external symbols needed (assumed defined)\n'
+    )
+    for op in c:
+        c_content += f"extern uintptr_t {op[2]};\n"
+    c_content += '\n'
+    c_content += '// define all instruction information\n'
+    c_content += 'struct instruction_gui_info table[] = {\n'
+    for op in c + [('NULL', 'NULL', 'NULL')]:
+        addr = f"(void*)&{op[2]}" if op[2] != 'NULL' else op[2]
+        c_content +=  '    {\n'
+        c_content += f"        .opname = {op[0]},\n"
+        c_content += f"        .desc = {op[1]},\n"
+        c_content += f"        .trampoline = {addr},\n"
+        c_content +=  '    },\n'
+    c_content += '};'
+    c_path = prefix/'instructions_cpu.c'
+    c_path.unlink(missing_ok=True)
+    with open(c_path, 'x', encoding='utf-8') as c_file:
+        c_file.write(c_content)
 
 def _ivk_gen() -> None:
     """ generate instruction information
@@ -81,8 +113,8 @@ def _ivk_gen() -> None:
             raise _ivkException(f"unable to parse the line {i}")
         _ivk_gen_asm(info, line_info)
         _ivk_gen_c(info, line_info)
-    print(info)
     _ivk_gen_file_asm(decl_path.parent, info['asm'])
+    _ivk_gen_file_c(decl_path.parent, info['c'])
 
 #---
 # Public
@@ -94,5 +126,5 @@ if __name__ == '__main__':
         print('instruction information generated!')
         sys.exit(0)
     except _ivkException as err:
-        print("\033[32m{err}\033[0m")
+        print(f"\033[32m{err}\033[0m")
         sys.exit(1)

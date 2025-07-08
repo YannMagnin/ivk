@@ -13,7 +13,9 @@ find_package(Python3 REQUIRED)
 
 set(SOURCES
   src/main.c
+  src/manual.c
   src/instructions_cpu.S
+  src/instructions_cpu.c
   src/ivk/_code.S
   src/ivk/_data.S
   src/ivk/prepare.S
@@ -21,7 +23,7 @@ set(SOURCES
 )
 
 add_custom_command(
-    OUTPUT ../src/instructions_cpu.S
+    OUTPUT ../src/instructions_cpu.S ../src/instructions_cpu.c
     COMMAND Python3::Interpreter ../scripts/instructions_generator.py
     DEPENDS ../scripts/instructions_generator.py
 )

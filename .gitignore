@@ -11,3 +11,4 @@ __pycache__/
 
 # custom
 src/instructions_cpu.S
+src/instructions_cpu.c
