@@ -9,41 +9,138 @@
 #include "ivk/utils.h"
 
 //---
+// Internals
+//---
+
+/* GUI scrollable menu info */
+struct menu {
+    i8 len;
+    i8 offset;
+    i8 pos;
+    i8 top;
+    i8 bottom;
+};
+
+/* initialize scrollable list */
+static void menu_init(struct menu *menu)
+{
+    menu->len = -1;
+    while (true) {
+        if (instruction_table[++menu->len].trampoline == NULL)
+            break;
+    }
+    menu->offset = 0;
+    menu->pos = 0;
+    menu->top = 1;
+    menu->bottom = row_count();
+}
+
+/* move the internal cursor */
+static void menu_move(struct menu *menu, int key, int quick, int wrap)
+{
+    int visible = menu->bottom - menu->top;
+    int max_offset = max(menu->len - visible, 0);
+
+    /* Quick moves */
+    if(key == KEY_UP && quick)
+    {
+        menu->pos = 0;
+        menu->offset = 0;
+    }
+    else if(key == KEY_DOWN && quick)
+    {
+        menu->pos = menu->len - 1;
+        menu->offset = max_offset;
+    }
+    /* Normal move up and wrapping move up */
+    else if(key == KEY_UP && menu->pos > 0)
+    {
+        menu->pos--;
+        menu->offset = min(menu->offset, menu->pos);
+    }
+    else if(key == KEY_UP && !menu->pos && wrap)
+    {
+        menu->pos = menu->len - 1;
+        menu->offset = max_offset;
+    }
+    /* Normal move down and wrapping move down */
+    else if(key == KEY_DOWN && menu->pos + 1 < menu->len)
+    {
+        menu->pos++;
+        if(menu->pos > menu->offset + visible - 1
+                && menu->offset + 1 <= max_offset)
+        {
+            menu->offset++;
+        }
+    }
+    else if(key == KEY_DOWN && menu->pos + 1 == menu->len && wrap)
+    {
+        menu->pos = 0;
+        menu->offset = 0;
+    }
+}
+
+/* show menu */
+static void menu_show(struct menu const *menu)
+{
+    int offset = menu->offset;
+    int pos = menu->pos;
+    int top = menu->top;
+    int bottom = menu->bottom;
+    int i = 0;
+    int j = top;
+
+    while(j < bottom && instruction_table[offset+i].trampoline != NULL)
+    {
+        _row(
+            2, j,
+            instruction_table[offset+i].opname,
+            instruction_table[offset+i].desc
+        );
+        i++;
+        j++;
+    }
+    if(menu->len > bottom - top)
+    {
+        //_scrollbar(offset, menu->len, top, bottom);
+    }
+
+    int selected = top + (pos - offset);
+    if(selected >= top && selected < bottom)
+        _highlight(selected);
+}
+
+/* execute the selected entry */
+static void menu_exec(struct menu *menu)
+{
+    manual_gui_entry(&instruction_table[menu->pos]);
+}
+
+//---
 // Public
 //---
 
 int main(void)
 {
-    int idx_max;
-    int idx;
-    int y;
+    struct menu menu;
+    int key;
 
-    idx_max = -1;
-    while (table[++idx_max].trampoline != NULL) {
-        ;
-    }
-
-    idx = 0;
+    menu_init(&menu);
     while (true)
     {
-        y = 0;
         dclear(C_WHITE);
-        _("i=%d", idx);
-        for (int i = idx ; i < 15 ; i++) {
-            if (table[i].trampoline == NULL) break;
-            _("%s", table[i].opname);
-        }
+        _title("Instruction selection");
+        menu_show(&menu);
         dupdate();
-        switch (getkey().key)
+
+        key = getkey().key;
+        switch (key)
         {
-            case KEY_LEFT:
-                if (idx < idx_max) idx += 1;
-                break;
-            case KEY_RIGHT:
-                if (idx > 0) idx -= 1;
-                break;
             case KEY_EXE:
-                manual_gui_entry(&table[idx]);
+                menu_exec(&menu);
+                break;
+            default:
+                menu_move(&menu, key, 0, 0);
                 break;
         }
     }

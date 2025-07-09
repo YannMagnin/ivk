@@ -15,6 +15,7 @@ void manual_gui_entry(struct instruction_gui_info *info)
     struct ivk_ctx_req req;
     struct ivk_ctx_out out;
     bool executed;
+    bool exit;
     int ret;
     int y;
 
@@ -26,14 +27,15 @@ void manual_gui_entry(struct instruction_gui_info *info)
     req.rm_data = 3;
 
     ret = 0;
+    exit = false;
     executed = false;
-    while (true)
+    while (exit == false)
     {
         if (executed)
             ret = ((int(*)(void*,void*))info->trampoline)(&out, &req);
         y = 1;
         dclear(C_WHITE);
-        _("%s", info->opname);
+        _title(info->opname);
         _("  desc: %s", info->desc);
         _("  config:");
         _("    Rn: %d -> %08x (%d)", req.rn_who, req.rn_data, req.rn_data);
@@ -92,6 +94,9 @@ void manual_gui_entry(struct instruction_gui_info *info)
                 break;
             case KEY_EXE:
                 executed = true;
+                break;
+            case KEY_EXIT:
+                exit = true;
                 break;
         }
     }

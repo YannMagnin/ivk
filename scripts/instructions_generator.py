@@ -58,7 +58,6 @@ def _ivk_gen_file_asm(prefix: Path, asm: Any) -> None:
 def _ivk_gen_file_c(prefix: Path, c: list[tuple[str,str,str]]) -> None:
     """ generate the GUI information
     """
-    print(c)
     c_content = (
         '//---\n'
         '// declare all instructions GUI information\n'
@@ -73,7 +72,7 @@ def _ivk_gen_file_c(prefix: Path, c: list[tuple[str,str,str]]) -> None:
         c_content += f"extern uintptr_t {op[2]};\n"
     c_content += '\n'
     c_content += '// define all instruction information\n'
-    c_content += 'struct instruction_gui_info table[] = {\n'
+    c_content += 'struct instruction_gui_info instruction_table[] = {\n'
     for op in c + [('NULL', 'NULL', 'NULL')]:
         addr = f"(void*)&{op[2]}" if op[2] != 'NULL' else op[2]
         c_content +=  '    {\n'
@@ -123,7 +122,6 @@ def _ivk_gen() -> None:
 if __name__ == '__main__':
     try:
         _ivk_gen()
-        print('instruction information generated!')
         sys.exit(0)
     except _ivkException as err:
         print(f"\033[32m{err}\033[0m")

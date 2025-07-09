@@ -6,9 +6,37 @@
 
 #include <gint/display.h>
 #include <gint/keyboard.h>
+#include <gint/defs/util.h>
 
 /* internal short-hand for print */
 #define _(str, ...) \
-    dprint(3, 3+((y++)*12), C_BLACK, str __VA_OPT__(,) __VA_ARGS__)
+    dprint(4, 6+((y++)*14), C_BLACK, str __VA_OPT__(,) __VA_ARGS__)
+
+/* internal short-hand for printXY */
+#define _row(x, y, name, desc)                  \
+    do {                                        \
+        dtext(4, 4+(y*14)+2, C_BLACK, name);    \
+        dtext_opt(                              \
+            DWIDTH - 4, 4+(y*14)+2,             \
+            C_BLACK, C_NONE,                    \
+            DTEXT_RIGHT, DTEXT_TOP,             \
+            desc                                \
+        );                                      \
+    } while (0)
+
+/* reverse color area */
+#define _highlight(y) \
+    drect(0, 4+(y*14)-1, DWIDTH, 4+((y+1)*14)-1, C_INVERT);
+
+/* title */
+#define _title(str)                                                     \
+    do {                                                                \
+        dtext_opt(                                                      \
+            DWIDTH/2, 4, C_BLACK, C_NONE, DTEXT_CENTER, DTEXT_TOP, str  \
+        );                                                              \
+        drect(0, 0, DWIDTH, 4+14-1, C_INVERT);                          \
+    } while (0)
+
+#define row_count() 14
 
 #endif /* _UTILS_H */

@@ -25,7 +25,7 @@ set(SOURCES
 add_custom_command(
     OUTPUT ../src/instructions_cpu.S ../src/instructions_cpu.c
     COMMAND Python3::Interpreter ../scripts/instructions_generator.py
-    DEPENDS ../scripts/instructions_generator.py
+    DEPENDS ../scripts/instructions_generator.py ../src/instruction-cpu.def
 )
 
 add_executable(ivk ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})

@@ -1,5 +1,22 @@
 //
 // CPU instruction declaration
 //
-0011.nnnn.mmmm.0100     div1        "1-step division (Rn÷Rm)→Rn"
-0011.nnnn.mmmm.1101     dmuls.l     "signed 64bit (Rn×Rm)→MACH/L"
+
+
+0000.0000.0001.1001     div0u       "0 -> M/Q/T"
+
+0010.nnnn.mmmm.0111     div0s       "<Rn>MSB -> Q, <Rm>MSB -> M, M^Q -> T"
+0010.nnnn.mmmm.1101     xtrct       "Rm:Rn middle 32 bits → Rn"
+
+
+0011.nnnn.mmmm.0100     div1        "1-step division (Rn/Rm)->Rn"
+0011.nnnn.mmmm.0101     dmulu.l     "u64 (Rn x Rm) -> MACH,MACL"
+0011.nnnn.mmmm.1101     dmuls.l     "i64 (Rn x Rm) -> MACH,MACHL"
+
+0100.nnnn.0001.0000     dt          "(Rn – 1) -> Rn && (Rn == 0) -> T"
+
+0110.nnnn.mmmm.1100     extu.b      "Rm zero-extended from byte -> Rn"
+0110.nnnn.mmmm.1101     extu.w      "Rm zero-extended from word -> Rn"
+0110.nnnn.mmmm.1110     exts.b      "Rm sign-extended from byte -> Rn"
+0110.nnnn.mmmm.1110     exts.w      "Rm sign-extended from word -> Rn"
+
