@@ -23,7 +23,7 @@ def _ivk_gen_asm(info: Any, line: Any) -> None:
         test[4][i] = x[0]
         test[i] = f"ivk_r{x[0]}"
     info['asm'].append((
-        line['opname'].replace('.',''),
+        line['opname'].replace('.','').replace('/', ''),
         ''.join(test[4]),
         *(test[0:4]),
     ))
@@ -31,10 +31,13 @@ def _ivk_gen_asm(info: Any, line: Any) -> None:
 def _ivk_gen_c(info: Any, line: Any) -> Any:
     """ generate C information
     """
+    opname = line['opname']
+    opname = opname.replace('.', '')
+    opname = opname.replace('/', '')
     info['c'].append((
         f"\"{line['opname']}\"",
         f"{line['opdesc']}",
-        f"__{line['opname'].replace('.','')}_ivk_exec",
+        f"__{opname}_ivk_exec",
     ))
 
 def _ivk_gen_file_asm(prefix: Path, asm: Any) -> None:
@@ -100,7 +103,7 @@ def _ivk_gen() -> None:
     }
     line_re = re.compile(
         r'(?P<opcode>(([10]{4}|n{4}|m{4})\.){3}([10]{4}|n{4}|m{4}))\s+'
-        r'(?P<opname>([\w\.]+))\s+'
+        r'(?P<opname>([\w\.\/]+))\s+'
         r'(?P<opdesc>("(.)+"))'
     )
     for i, line in enumerate(decl.split('\n')):
@@ -109,7 +112,7 @@ def _ivk_gen() -> None:
         if line.startswith('//'):
             continue
         if not (line_info := line_re.match(line)):
-            raise _ivkException(f"unable to parse the line {i}")
+            raise _ivkException(f"unable to parse the line {i}: {line}")
         _ivk_gen_asm(info, line_info)
         _ivk_gen_c(info, line_info)
     _ivk_gen_file_asm(decl_path.parent, info['asm'])

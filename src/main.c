@@ -32,7 +32,7 @@ static void menu_init(struct menu *menu)
     menu->offset = 0;
     menu->pos = 0;
     menu->top = 1;
-    menu->bottom = row_count();
+    menu->bottom = ROW_COUNT + 1;
 }
 
 /* move the internal cursor */
@@ -102,7 +102,16 @@ static void menu_show(struct menu const *menu)
     }
     if(menu->len > bottom - top)
     {
-        //_scrollbar(offset, menu->len, top, bottom);
+        int area_x      = 391;
+        int area_width  = 2;
+        int area_top    = ROW_Y + ROW_H * (top - 1);
+        int area_height = ROW_H * (bottom - top);
+
+        int bar_top = (offset * area_height) / menu->len;
+        int bar_height = ((bottom - top) * area_height) / menu->len;
+
+        drect(area_x, area_top + bar_top + 3, area_x + area_width - 1,
+                area_top + bar_top + bar_height + 4, C_BLACK);
     }
 
     int selected = top + (pos - offset);
