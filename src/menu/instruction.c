@@ -15,8 +15,9 @@
 //---
 
 /* display / run the instruction */
-void manual_gui_entry(struct instruction_gui_info *info)
+void menu_instruction_exec(IvkMenuInst *menu, int idx)
 {
+    struct instruction_gui_info *info;
     struct ivk_ctx_req req;
     struct ivk_ctx_out out;
     key_event_t ev;
@@ -25,6 +26,9 @@ void manual_gui_entry(struct instruction_gui_info *info)
     int ret;
     int y;
 
+    (void)menu;
+
+    info = &instruction_table[idx];
     memset(&req, 0x00, sizeof(req));
     memset(&out, 0x00, sizeof(out));
     req.rn_who = 1;
@@ -67,16 +71,16 @@ void manual_gui_entry(struct instruction_gui_info *info)
                 continue;
             switch (ev.key)
             {
-                case KEY_LEFTP:
+                case KEY_RIGHTP:
                     req.rn_data += 1;
                     break;
-                case KEY_RIGHTP:
+                case KEY_LEFTP:
                     req.rn_data -= 1;
                     break;
-                case KEY_COMMA:
+                case KEY_ARROW:
                     req.rm_data += 1;
                     break;
-                case KEY_ARROW:
+                case KEY_COMMA:
                     req.rm_data -= 1;
                     break;
             }
@@ -122,95 +126,56 @@ void manual_gui_entry(struct instruction_gui_info *info)
     }
 }
 
+int menu_instruction_display_row(IvkMenuInst *menu, int y, int idx)
+{
+    if (idx >= menu->nb_entry)
+        return -1;
+    dtext(4, 10 + (y * 14) + 2, C_BLACK, instruction_table[idx].opname);
+    dtext_opt(
+        DWIDTH - 9,
+        10 + (y * 14) + 2,
+        C_BLACK,
+        C_NONE,
+        DTEXT_RIGHT,
+        DTEXT_TOP,
+        instruction_table[idx].desc
+    );
+    return 0;
+}
+
 //---
 // Menu interface
 //---
 
 void menu_instruction_init(IvkMenuInst *menu)
 {
-    menu->len = -1;
+    int nb_entry;
+
+    nb_entry = -1;
     while (true) {
-        if (instruction_table[++menu->len].trampoline == NULL)
+        if (instruction_table[++nb_entry].trampoline == NULL)
             break;
     }
-    menu->offset = 0;
-    menu->pos = 0;
-    menu->top = 1;
-    menu->bottom = ROW_COUNT + 1;
+    memset(menu, 0x00, sizeof(IvkMenuInst));
+    menu_list_init(
+        &menu->list,
+        menu,
+        (void*)&menu_instruction_display_row,
+        (void*)&menu_instruction_exec,
+        nb_entry
+    );
+    menu->nb_entry = nb_entry;
 }
 
 void menu_instruction_display(IvkMenuInst *menu)
 {
-    int offset = menu->offset;
-    int pos = menu->pos;
-    int top = menu->top;
-    int bottom = menu->bottom;
-    int i = 0;
-    int j = top;
-
     dclear(C_WHITE);
     _title("Instruction selection");
-    while(j < bottom && instruction_table[offset+i].trampoline != NULL)
-    {
-        _row(
-            2, j,
-            instruction_table[offset+i].opname,
-            instruction_table[offset+i].desc
-        );
-        i++;
-        j++;
-    }
-    if(menu->len > bottom - top)
-    {
-        int area_x      = 391;
-        int area_width  = 2;
-        int area_top    = ROW_Y + ROW_H * (top - 1);
-        int area_height = ROW_H * (bottom - top);
-
-        int bar_top = (offset * area_height) / menu->len;
-        int bar_height = ((bottom - top) * area_height) / menu->len;
-
-        drect(area_x, area_top + bar_top + 3, area_x + area_width - 1,
-                area_top + bar_top + bar_height + 4, C_BLACK);
-    }
-    int selected = top + (pos - offset);
-    if(selected >= top && selected < bottom)
-        _highlight(selected);
+    menu_list_display(&menu->list);
     dupdate();
 }
 
 void menu_instruction_key(IvkMenuInst *menu, key_event_t keyev)
 {
-    int max_offset;
-    int visible;
-
-    visible = menu->bottom - menu->top;
-    max_offset = max(menu->len - visible, 0);
-    switch(keyev.key)
-    {
-        case KEY_EXE:
-            if (keyev.type == KEYEV_DOWN)
-                manual_gui_entry(&instruction_table[menu->pos]);
-            break;
-        case KEY_UP:
-            if (menu->pos > 0) {
-                menu->pos--;
-                menu->offset = min(menu->offset, menu->pos);
-            } else {
-                menu->pos = menu->len - 1;
-                menu->offset = max_offset;
-            }
-            break;
-        case KEY_DOWN:
-            if (++menu->pos < menu->len) {
-                if(menu->pos > menu->offset + visible - 1 &&
-                        menu->offset + 1 <= max_offset) {
-                    menu->offset++;
-                }
-            } else {
-                menu->pos = 0;
-                menu->offset = 0;
-            }
-            break;
-    }
+    menu_list_key(&menu->list, keyev);
 }

@@ -14,6 +14,7 @@ find_package(Python3 REQUIRED)
 set(SOURCES
   src/main.c
   src/menu/instruction.c
+  src/menu/_list.c
   src/instructions_cpu.S
   src/instructions_cpu.c
   src/ivk/_code.S
