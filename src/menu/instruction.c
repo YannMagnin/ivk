@@ -170,7 +170,7 @@ void menu_instruction_init(IvkMenuInst *menu)
 void menu_instruction_display(IvkMenuInst *menu)
 {
     dclear(C_WHITE);
-    _title("Instruction selection");
+    _title("Instruction selection >");
     menu_list_display(&menu->list);
     dupdate();
 }

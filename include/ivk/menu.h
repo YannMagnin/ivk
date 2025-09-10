@@ -63,21 +63,18 @@ extern void menu_instruction_key(IvkMenuInst *menu, key_event_t keyev);
 
 /* internal menu information */
 struct IvkMenuDisco {
-    i8 len;
-    i8 offset;
-    i8 pos;
-    i8 top;
-    i8 bottom;
+    IvkList list;
+    int nb_entry;
 };
 typedef struct IvkMenuDisco IvkMenuDisco;
 
 /* menu init */
-extern void menu_disco_init(IvkMenuInst *menu);
+extern void menu_disco_init(IvkMenuDisco *menu);
 
 /* menu display */
-extern void menu_disco_display(IvkMenuInst *menu);
+extern void menu_disco_display(IvkMenuDisco *menu);
 
 /* menu key event handling */
-extern void menu_disco_key(IvkMenuInst *menu, key_event_t keyev);
+extern void menu_disco_key(IvkMenuDisco *menu, key_event_t keyev);
 
 #endif /* IVK_MENU_H */
