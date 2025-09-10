@@ -2,6 +2,7 @@
 
 #include <gint/display.h>
 #include <gint/keyboard.h>
+#include <gint/exc.h>
 #include <gint/gint.h>
 
 #include "ivk/menu.h"
@@ -18,14 +19,15 @@ struct _disco_opcode {
     int invalid;
     int valid;
     int count;
+    int skipped;
 } _disco_table[] = {
     // 8xxx:
     //   83xx libre
     //   86xx libre
     //   87xx libre
-    {"1000.0011.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0},
-    {"1000.0110.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0},
-    {"1000.0111.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0},
+    {"1000.0011.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0, 0},
+    {"1000.0110.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0, 0},
+    {"1000.0111.xxxx.xxxx", 0xffff, 0x0000, -1, -1, 0, 0},
     // 4xxx
     //   4xy0 libre (y = 3..15)
     //   4xy1 libre (y = 3..15)
@@ -34,21 +36,21 @@ struct _disco_opcode {
     //   4xy8 libre (y = 3..15)
     //   4xy9 libre (y = 3..9, 11, 12, 13, 15)
     //   4xyb libre (y = 3..15)
-    {"1000.xxxx.yyyy.0000", 0xffff, 0x1fff, -1, -1, 0},
-    {"1000.xxxx.yyyy.0001", 0xffff, 0x1fff, -1, -1, 0},
-    {"1000.xxxx.yyyy.0100", 0xffff, 0x0fff, -1, -1, 0},
-    {"1000.xxxx.yyyy.0101", 0xffff, 0x1fff, -1, -1, 0},
-    {"1000.xxxx.yyyy.1000", 0xffff, 0x1fff, -1, -1, 0},
-    {"1000.xxxx.yyyy.1001", 0xffff, 0x1fdd, -1, -1, 0},
-    {"1000.xxxx.yyyy.1011", 0xffff, 0x1fff, -1, -1, 0},
+    {"1000.xxxx.yyyy.0000", 0xffff, 0x1fff, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.0001", 0xffff, 0x1fff, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.0100", 0xffff, 0x0fff, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.0101", 0xffff, 0x1fff, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.1000", 0xffff, 0x1fff, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.1001", 0xffff, 0x1fdd, -1, -1, 0, 0},
+    {"1000.xxxx.yyyy.1011", 0xffff, 0x1fff, -1, -1, 0, 0},
     // 3xxx
     //  3xx1 libre
     //  3xx9 libre
-    {"0011.xxxx.xxxx.0001", 0xffff, 0x0000, -1, -1, 0},
-    {"0011.xxxx.xxxx.1001", 0xffff, 0x0000, -1, -1, 0},
+    {"0011.xxxx.xxxx.0001", 0xffff, 0x0000, -1, -1, 0, 0},
+    {"0011.xxxx.xxxx.1001", 0xffff, 0x0000, -1, -1, 0, 0},
     // 2xxx
     //  2xx3 libre
-    {"0010.xxxx.xxxx.0011", 0xffff, 0x0000, -1, -1, 0},
+    {"0010.xxxx.xxxx.0011", 0xffff, 0x0000, -1, -1, 0, 0},
     // 0xxx
     //   0xx0 libre
     //   0xx1 libre
@@ -56,22 +58,49 @@ struct _disco_opcode {
     //   0zy8 libre (y = 6, 7, 10, 11, 13, 14, 15 || z != 0)
     //   0zy9 libre (y != 2 && (y = 3..15 || z != 0))
     //   0zyb libre (y = 3..9, 11..15 || z != 0)
-    {"0000.xxxx.xxxx.0000", 0xffff, 0x0000, -1, -1, 0},
-    {"0000.xxxx.xxxx.0001", 0xffff, 0x0000, -1, -1, 0},
-    {"0000.xxxx.yyyy.0011", 0xffff, 0x5c01, -1, -1, 0},
-    {"0000.0000.xxxx.1000", 0xffff, 0x0337, -1, -1, 0},
-    {"0000.xxxx.yyyy.1000", 0x7fff, 0xffff, -1, -1, 0},
+    {"0000.xxxx.xxxx.0000", 0xffff, 0x0000, -1, -1, 0, 0},
+    {"0000.xxxx.xxxx.0001", 0xffff, 0x0000, -1, -1, 0, 0},
+    {"0000.xxxx.yyyy.0011", 0xffff, 0x5c01, -1, -1, 0, 0},
+    {"0000.0000.yyyy.1000", 0xffff, 0x0337, -1, -1, 0, 0},
+    {"0000.xxxx.yyyy.1000", 0x7fff, 0xffff, -1, -1, 0, 0},
 
     // end
-    {NULL, 0xffff, 0xffff, -1, -1, 0},
+    {NULL, 0xffff, 0xffff, -1, -1, 0, 0},
 };
 
 //---
 // exec
 //---
 
-void menu_disco_exec_core(struct _disco_opcode *info, u16 opcode, int level)
+static volatile bool illegal;
+static volatile void *area;
+
+int _menu_disco_exec_handler(u32 code)
 {
+    if(code == 0x180/* illegal instruction */) {
+        illegal = true;
+        gint_exc_skip(1);
+        return 0;
+    }
+    return 1;
+}
+
+int menu_disco_exec_opcode(u16 opcode)
+{
+    gint_exc_catch(_menu_disco_exec_handler);
+    illegal = false;
+    extern void __ivk_exec_opcode(volatile void**,u16);
+    __ivk_exec_opcode(&area, opcode);
+    gint_exc_catch(NULL);
+    return illegal;
+}
+
+void menu_disco_exec_core(
+    struct _disco_opcode *info,
+    u16 opcode,
+    int level,
+    bool wait
+) {
     u16 saved_opcode;
     int base;
     int idx;
@@ -93,8 +122,28 @@ void menu_disco_exec_core(struct _disco_opcode *info, u16 opcode, int level)
             );
         }
         dprint(x + (17 * 8), 10, C_BLACK, "(%04x)", opcode);
+        dprint(0, 20, C_BLACK, "area: %p", area);
+        dprint(0, 30, C_BLACK, "invalid: %d", info->invalid);
+        dprint(0, 40, C_BLACK, "valid: %d", info->valid);
+        dprint(0, 50, C_BLACK, "skipped: %d", info->skipped);
         dupdate();
-        getkey();
+        if (wait) {
+            if(getkey().key == KEY_EXE) {
+                if(menu_disco_exec_opcode(opcode) != 0) {
+                    info->invalid += 1;
+                } else {
+                    info->valid += 1;
+                }
+            } else {
+                info->skipped += 1;
+            }
+        } else {
+            if(menu_disco_exec_opcode(opcode) != 0) {
+                info->invalid += 1;
+            } else {
+                info->valid += 1;
+            }
+        }
         return;
     }
     idx = level * 5;
@@ -105,7 +154,8 @@ void menu_disco_exec_core(struct _disco_opcode *info, u16 opcode, int level)
         menu_disco_exec_core(
             info,
             opcode | (base << (4 * (3-level))),
-            level + 1
+            level + 1,
+            wait
         );
         return;
     }
@@ -120,7 +170,8 @@ void menu_disco_exec_core(struct _disco_opcode *info, u16 opcode, int level)
         menu_disco_exec_core(
             info,
             saved_opcode | (i << (4 * (3-level))),
-            level + 1
+            level + 1,
+            wait
         );
     }
 }
@@ -136,8 +187,24 @@ void menu_disco_exec(IvkMenuInst *menu, int idx)
     opcode = &_disco_table[idx];
     opcode->valid = 0;
     opcode->invalid = 0;
-    menu_disco_exec_core(opcode, 0x0000, 0);
+    menu_disco_exec_core(opcode, 0x0000, 0, false);
 }
+
+void menu_disco_zero(IvkMenuInst *menu, int idx)
+{
+    struct _disco_opcode *opcode;
+
+    (void)menu;
+
+    if (idx >= menu->nb_entry)
+        return;
+    opcode = &_disco_table[idx];
+    opcode->valid = 0;
+    opcode->invalid = 0;
+    menu_disco_exec_core(opcode, 0x0000, 0, true);
+}
+
+
 
 int menu_disco_display_row(IvkMenuDisco *menu, int y, int idx)
 {
@@ -186,6 +253,9 @@ void menu_disco_init(IvkMenuDisco *menu)
             break;
     }
 
+    //todo: move me
+    area = NULL;
+
     memset(menu, 0x00, sizeof(IvkMenuDisco));
     menu->nb_entry = nb_entry;
     menu_list_init(
@@ -193,6 +263,7 @@ void menu_disco_init(IvkMenuDisco *menu)
         menu,
         (void*)&menu_disco_display_row,
         (void*)&menu_disco_exec,
+        (void*)&menu_disco_zero,
         menu->nb_entry
     );
 }

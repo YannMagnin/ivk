@@ -22,6 +22,7 @@ set(SOURCES
   src/ivk/_data.S
   src/ivk/prepare.S
   src/ivk/exec.S
+  src/ivk/invalid.S
 )
 
 add_custom_command(

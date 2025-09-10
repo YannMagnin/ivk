@@ -12,12 +12,14 @@ void menu_list_init(
     void *data,
     int (*disp)(void*,int,int),
     void (*exec)(void*,int),
+    void (*zero)(void*,int),
     int nb_entry
 ) {
     memset(list, 0x00, sizeof(IvkList));
     list->user_data   = data;
     list->user_disp   = disp;
     list->user_exec   = exec;
+    list->user_zero   = zero;
     list->nb_entry    = nb_entry;
     list->offset      = 0;
     list->pos         = 0;
@@ -78,8 +80,12 @@ void menu_list_key(IvkList *list, key_event_t keyev)
     switch(keyev.key)
     {
         case KEY_EXE:
-            if (keyev.type == KEYEV_DOWN)
+            if (keyev.type == KEYEV_DOWN && list->user_exec != NULL)
                 list->user_exec(list->user_data, list->pos);
+            break;
+        case KEY_0:
+            if (keyev.type == KEYEV_DOWN && list->user_zero != NULL)
+                list->user_zero(list->user_data, list->pos);
             break;
         case KEY_UP:
             if (list->pos > 0) {

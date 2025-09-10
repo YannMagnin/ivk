@@ -162,6 +162,7 @@ void menu_instruction_init(IvkMenuInst *menu)
         menu,
         (void*)&menu_instruction_display_row,
         (void*)&menu_instruction_exec,
+        NULL,
         nb_entry
     );
     menu->nb_entry = nb_entry;

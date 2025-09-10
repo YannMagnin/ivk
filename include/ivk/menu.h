@@ -18,6 +18,7 @@ struct IvkList {
     int bottom;
     int (*user_disp)(void*,int,int);
     void (*user_exec)(void*,int);
+    void (*user_zero)(void*,int);
     void *user_data;
 };
 typedef struct IvkList IvkList;
@@ -28,6 +29,7 @@ extern void menu_list_init(
     void *data,
     int (*disp)(void*,int,int),
     void (*exec)(void*,int),
+    void (*zero)(void*,int),
     int nb_entry
 );
 
