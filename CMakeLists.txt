@@ -13,7 +13,7 @@ find_package(Python3 REQUIRED)
 
 set(SOURCES
   src/main.c
-  src/manual.c
+  src/menu/instruction.c
   src/instructions_cpu.S
   src/instructions_cpu.c
   src/ivk/_code.S
